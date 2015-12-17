@@ -56,7 +56,8 @@ require_api( 'utility_api.php' );
 collapse_open( 'bugnotestats' );
 
 $t_today = date( 'd:m:Y' );
-$t_date_submitted = isset( $t_bug ) ? date( 'd:m:Y', $t_bug->date_submitted ) : $t_today;
+$t_first_day_of_month = date( '1:m:Y' );
+$t_date_submitted = isset( $t_bug ) ? date( 'd:m:Y', $t_bug->date_submitted ) : $t_first_day_of_month;
 
 $t_bugnote_stats_from_def = $t_date_submitted;
 $t_bugnote_stats_from_def_ar = explode( ':', $t_bugnote_stats_from_def );
@@ -77,6 +78,8 @@ $t_bugnote_stats_to_def_y = $t_bugnote_stats_to_def_ar[2];
 $t_bugnote_stats_to_d = gpc_get_int( 'end_day', $t_bugnote_stats_to_def_d );
 $t_bugnote_stats_to_m = gpc_get_int( 'end_month', $t_bugnote_stats_to_def_m );
 $t_bugnote_stats_to_y = gpc_get_int( 'end_year', $t_bugnote_stats_to_def_y );
+
+$user_id = current_user_is_administrator() ? gpc_get_int('user_id', auth_get_current_user_id()) : auth_get_current_user_id();
 
 $f_get_bugnote_stats_button = gpc_get_string( 'get_bugnote_stats_button', '' );
 
@@ -119,6 +122,26 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 				?>
 			</td>
 		</tr>
+		<?php if (current_user_is_administrator()) { ?>
+		<tr class="row-2">
+			<td class="category" width="25%">
+				User:
+			<select name="user_id">
+			<?php
+				/*
+				echo '<option value="' . META_FILTER_MYSELF . '" ';
+				check_selected( $user_id, META_FILTER_MYSELF );
+				echo '>[' . lang_get( 'myself' ) . ']</option>';
+				*/
+			?>
+			<option value="<?php echo META_FILTER_ANY?>"<?php check_selected( $user_id, META_FILTER_ANY );?>>[<?php echo lang_get( 'all_users' )?>]</option>
+			<?php
+				print_assign_to_option_list( $user_id, $f_project_id );
+			?>
+			</select>
+			</td>
+		</tr>
+		<?php } ?>
 <?php
 	if( $t_cost_col ) {
 ?>
@@ -143,11 +166,11 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 </form>
 
 <?php
-	if( !is_blank( $f_get_bugnote_stats_button ) ) {
+	if( true || !is_blank( $f_get_bugnote_stats_button ) ) {
 		# Retrieve time tracking information
 		$t_from = $t_bugnote_stats_from_y . '-' . $t_bugnote_stats_from_m . '-' . $t_bugnote_stats_from_d;
 		$t_to = $t_bugnote_stats_to_y . '-' . $t_bugnote_stats_to_m . '-' . $t_bugnote_stats_to_d;
-		$t_bugnote_stats = bugnote_stats_get_project_array( $f_project_id, $t_from, $t_to, $f_bugnote_cost );
+		$t_bugnote_stats = bugnote_stats_get_project_array( $f_project_id, $t_from, $t_to, $f_bugnote_cost, $user_id );
 
 		# Sort the array by bug_id, user/real name
 		if( ON == config_get( 'show_realname' ) ) {

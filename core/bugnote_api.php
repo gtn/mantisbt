@@ -649,7 +649,7 @@ function bugnote_stats_get_events_array( $p_bug_id, $p_from, $p_to ) {
  * @return array array of bugnote stats
  * @access public
  */
-function bugnote_stats_get_project_array( $p_project_id, $p_from, $p_to, $p_cost ) {
+function bugnote_stats_get_project_array( $p_project_id, $p_from, $p_to, $p_cost, $user_id = 0 ) {
 	$t_params = array();
 	$c_to = strtotime( $p_to ) + SECONDS_PER_DAY - 1;
 	$c_from = strtotime( $p_from );
@@ -664,6 +664,10 @@ function bugnote_stats_get_project_array( $p_project_id, $p_from, $p_to, $p_cost
 		$t_params[] = $p_project_id;
 	} else {
 		$t_project_where = '';
+	}
+
+	if ($user_id) {
+		$t_project_where .= ' AND b.reporter_id = '.(int)$user_id;
 	}
 
 	if( !is_blank( $c_from ) ) {
