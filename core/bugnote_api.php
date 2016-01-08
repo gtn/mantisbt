@@ -667,7 +667,7 @@ function bugnote_stats_get_project_array( $p_project_id, $p_from, $p_to, $p_cost
 	}
 
 	if ($user_id) {
-		$t_project_where .= ' AND b.reporter_id = '.(int)$user_id;
+		$t_project_where .= ' AND bn.reporter_id = '.(int)$user_id;
 	}
 
 	if( !is_blank( $c_from ) ) {
