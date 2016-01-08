@@ -409,3 +409,18 @@ function toggleDisplay(idTag)
 {
 	setDisplay( idTag, (document.getElementById(idTag).style.display == 'none')?1:0 );
 }
+
+// GTN
+$(function() {
+	$('#bugnoteadd input[name=time_tracking]').keyup(function(){
+		if (this.value && !$('#bugnoteadd textarea[name=bugnote_text]').val().trim() ) {
+			// empty note and added time
+			// -> flash the private button and turn private on!
+			// so the customer won't see our empty time entree
+			$('#bugnoteadd input[name=private]').closest('tr').animate({
+			    backgroundColor: "yellow"
+            });
+			$('#bugnoteadd input[name=private]').prop('checked', true);
+		}
+	});
+});
