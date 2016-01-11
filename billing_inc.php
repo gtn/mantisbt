@@ -81,6 +81,8 @@ $t_bugnote_stats_to_y = gpc_get_int( 'end_year', $t_bugnote_stats_to_def_y );
 
 $user_id = current_user_is_administrator() ? gpc_get_int('user_id', auth_get_current_user_id()) : auth_get_current_user_id();
 
+// $sorting = gpc_get_string('sorting', 'bug');
+
 $f_get_bugnote_stats_button = gpc_get_string( 'get_bugnote_stats_button', '' );
 
 # Retrieve the cost as a string and convert to floating point
@@ -141,6 +143,13 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 			</select>
 			</td>
 		</tr>
+		<!-- tr class="row-2">
+			<td class="category">
+				Sortierung:
+				<label><input type="radio" name="sorting" value="bug" <?php if ($sorting=='bug') echo 'checked="checked"'; ?> /> Issue</label>
+				<label><input type="radio" name="sorting" value="date" <?php if ($sorting=='date') echo 'checked="checked"'; ?> /> Datum</label>
+			</td>
+		</tr -->
 		<?php } ?>
 <?php
 	if( $t_cost_col ) {
@@ -166,7 +175,8 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 </form>
 
 <?php
-	if( true || !is_blank( $f_get_bugnote_stats_button ) ) {
+
+	if( true ) { // || !is_blank( $f_get_bugnote_stats_button ) ) {
 		# Retrieve time tracking information
 		$t_from = $t_bugnote_stats_from_y . '-' . $t_bugnote_stats_from_m . '-' . $t_bugnote_stats_from_d;
 		$t_to = $t_bugnote_stats_to_y . '-' . $t_bugnote_stats_to_m . '-' . $t_bugnote_stats_to_d;
@@ -192,7 +202,7 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 
 		$t_prev_id = -1;
 ?>
-<br />
+<h3>By Issue</h3>
 <table class="width100" cellspacing="0">
 	<tr class="row-category2">
 		<td class="small-caption bold">
@@ -260,9 +270,7 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 	</tr>
 </table>
 
-<br />
-<br />
-
+<h3>Totals</h3>
 <table class="width100" cellspacing="0">
 	<tr class="row-category2">
 		<td class="small-caption bold">
@@ -312,6 +320,95 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 
 <?php
 	} # end if
+?>
+
+
+<?php
+$p_from = $t_bugnote_stats_from_y . '-' . $t_bugnote_stats_from_m . '-' . $t_bugnote_stats_from_d;
+$p_to = $t_bugnote_stats_to_y . '-' . $t_bugnote_stats_to_m . '-' . $t_bugnote_stats_to_d;
+
+$c_to = strtotime( $p_to ) + SECONDS_PER_DAY - 1;
+$c_from = strtotime( $p_from );
+
+
+$query = "SELECT bn.*, realname, bug.summary, bug_text.note
+ 	FROM {bugnote} bn
+ 	JOIN {user} u ON u.id = bn.reporter_id
+ 	LEFT JOIN {bug} bug ON bn.bug_id = bug.id
+ 	LEFT JOIN {bugnote_text} bug_text ON bug_text.id = bn.bugnote_text_id
+ 	WHERE bn.time_tracking > 0";
+if ($user_id) {
+	$query .= ' AND bn.reporter_id = '.(int)$user_id;
+}
+$query .= ' AND bn.date_submitted >= ' . $c_from.' AND bn.date_submitted <= ' . $c_to;
+$query .= ' ORDER BY bn.date_submitted DESC';
+
+$result = db_query_bound( $query, $t_params );
+
+$values = [];
+
+while ($row = db_fetch_array( $result )) {
+	$values[date('Y-m', $row["date_submitted"])] += 	$row["time_tracking"];
+	// $values[date('Y-m-d', $row["date_submitted"]).$row["date_submitted"]] = $row;
+	$values[$row["id"]] = $row;
+	// $values[date('Y-m-d', $row["date_submitted"])] += $row["time_tracking"];
+
+	// var_dump($row);
+}
+
+// krsort($values);
+?>
+<h3>By Date</h3>
+<table class="width100" cellspacing="0">
+	<tr class="row-category2">
+		<?php if (!$user_id) { ?>
+		<td class="small-caption bold">
+			<?php echo lang_get( 'username' ) ?>
+		</td>
+		<?php } ?>
+		<td class="small-caption bold">
+			<?php echo lang_get( 'timestamp' ) ?>
+		</td>
+		<td class="small-caption bold">
+			<?php echo lang_get( 'time_tracking' ) ?>
+		</td>
+		<td class="small-caption bold">
+			<?php echo lang_get( 'issues' ) ?>
+		</td>
+		<td class="small-caption bold">
+			<?php echo lang_get( 'bug_notes_title' ) ?>
+		</td>
+		<td class="small-caption bold">
+		</td>
+
+	</tr>
+<?php
+foreach ($values as $date=>$row) {
+	if (!is_array($row)) {
+		echo '<tr class="row-category-history">';
+		if (!$user_id) { echo '<td></td>'; }
+		echo '<td>'.$date.'</td>';
+		echo '<td align="right">'.db_minutes_to_hhmm($row).'</td>';
+		echo '<td></td>';
+		echo '<td></td>';
+		echo '<td></td>';
+	} else {
+		echo '<tr>';
+		if (!$user_id) { echo '<td class="small-caption">'.$row["realname"].'</td>'; }
+		echo '<td class="small-caption">'.date('Y-m-d', $row["date_submitted"]).'</td>';
+		echo '<td class="small-caption" align="right">'.db_minutes_to_hhmm($row["time_tracking"]).'</td>';
+		echo '<td class="small-caption">'.string_get_bug_view_link( $row['bug_id'] ).' '.$row["summary"].'</td>';
+		echo '<td class="small-caption" width="50%"><a href="view.php?id='.$row["bug_id"].'">'.string_display_line(trim($row["note"])?$row["note"]:'[empty]').'</td>';
+		echo '<td class="small-caption"><a href="bugnote_edit_page.php?bugnote_id='.$row["id"].'">edit</td>';
+	}
+
+	// echo '<td>'.$date.'</td>';
+	// echo '<td>'.number_format($value / 60, 2).'</td>';
+}
+?>
+	</table>
+
+<?php
 	collapse_closed( 'bugnotestats' );
 ?>
 
