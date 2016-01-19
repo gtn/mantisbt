@@ -88,7 +88,16 @@ $f_get_bugnote_stats_button = gpc_get_string( 'get_bugnote_stats_button', '' );
 # Retrieve the cost as a string and convert to floating point
 $f_bugnote_cost = floatval( gpc_get_string( 'bugnote_cost', '' ) );
 
-$f_project_id = helper_get_current_project();
+$f_project_id = gpc_get_string('project_id', '');
+
+if ($f_project_id === '') {
+	$f_project_id = helper_get_current_project();
+	$f_project_trace = join( ';', helper_get_current_project_trace() );
+} else {
+	$f_project_trace = $f_project_id;
+	$f_project_id = explode(';', $f_project_id);
+	$f_project_id = (int)end($f_project_id);
+}
 
 if( ON == config_get( 'time_tracking_with_billing' ) ) {
 	$t_cost_col = true;
@@ -100,7 +109,7 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 # CSRF protection not required here - form does not result in modifications
 ?>
 
-<form method="post" action="">
+<form method="post" action="" id="time_tracking">
 	<input type="hidden" name="id" value="<?php echo isset( $f_bug_id ) ? $f_bug_id : 0 ?>" />
 	<table class="width100" cellspacing="0">
 		<tr>
@@ -120,14 +129,16 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 					$g_filter[FILTER_PROPERTY_END_DAY] = $t_bugnote_stats_to_d;
 					$g_filter[FILTER_PROPERTY_END_MONTH] = $t_bugnote_stats_to_m;
 					$g_filter[FILTER_PROPERTY_END_YEAR] = $t_bugnote_stats_to_y;
+
+					ob_start();
 					print_filter_do_filter_by_date( true );
+					echo str_replace('</table>', '', ob_get_clean());
 				?>
 			</td>
 		</tr>
 		<?php if (current_user_is_administrator()) { ?>
-		<tr class="row-2">
-			<td class="category" width="25%">
-				User:
+		<tr>
+			<td>User:</td><td>
 			<select name="user_id">
 			<?php
 				/*
@@ -138,11 +149,19 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 			?>
 			<option value="<?php echo META_FILTER_ANY?>"<?php check_selected( $user_id, META_FILTER_ANY );?>>[<?php echo lang_get( 'all_users' )?>]</option>
 			<?php
-				print_assign_to_option_list( $user_id, $f_project_id );
+				print_assign_to_option_list( $user_id, 0); // $f_project_id );
 			?>
 			</select>
 			</td>
 		</tr>
+		<tr>
+			<td>Project:</td><td>
+				<select name="project_id">
+				<?php print_project_option_list( $f_project_trace, true, null, true ); ?>
+				</select>
+			</td>
+		</tr>
+
 		<!-- tr class="row-2">
 			<td class="category">
 				Sortierung:
@@ -163,8 +182,9 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 <?php
 	}
 ?>
+		</table></td></tr>
 		<tr>
-			<td class="center" colspan="2">
+			<td class="" colspan="2">
 				<input type="submit" class="button"
 					name="get_bugnote_stats_button"
 					value="<?php echo lang_get( 'time_tracking_get_info_button' ) ?>"
@@ -330,15 +350,18 @@ $p_to = $t_bugnote_stats_to_y . '-' . $t_bugnote_stats_to_m . '-' . $t_bugnote_s
 $c_to = strtotime( $p_to ) + SECONDS_PER_DAY - 1;
 $c_from = strtotime( $p_from );
 
-
-$query = "SELECT bn.*, realname, bug.summary, bug_text.note
+$query = "SELECT bn.*, realname, p.name AS project_name, bug.summary, bug_text.note
  	FROM {bugnote} bn
  	JOIN {user} u ON u.id = bn.reporter_id
  	LEFT JOIN {bug} bug ON bn.bug_id = bug.id
+ 	LEFT JOIN {project} p ON p.id=bug.project_id
  	LEFT JOIN {bugnote_text} bug_text ON bug_text.id = bn.bugnote_text_id
  	WHERE bn.time_tracking > 0";
 if ($user_id) {
 	$query .= ' AND bn.reporter_id = '.(int)$user_id;
+}
+if ($f_project_id) {
+	$query .= ' AND p.id = '.(int)$f_project_id;
 }
 $query .= ' AND bn.date_submitted >= ' . $c_from.' AND bn.date_submitted <= ' . $c_to;
 $query .= ' ORDER BY bn.date_submitted DESC';
@@ -397,8 +420,8 @@ foreach ($values as $date=>$row) {
 		if (!$user_id) { echo '<td class="small-caption">'.$row["realname"].'</td>'; }
 		echo '<td class="small-caption">'.date('Y-m-d', $row["date_submitted"]).'</td>';
 		echo '<td class="small-caption" align="right">'.db_minutes_to_hhmm($row["time_tracking"]).'</td>';
-		echo '<td class="small-caption">'.string_get_bug_view_link( $row['bug_id'] ).' '.$row["summary"].'</td>';
-		echo '<td class="small-caption" width="50%"><a href="view.php?id='.$row["bug_id"].'">'.string_display_line(trim($row["note"])?$row["note"]:'[empty]').'</td>';
+		echo '<td class="small-caption">'.$row["project_name"].'<br />'.string_get_bug_view_link( $row['bug_id'] ).' '.$row["summary"].'</td>';
+		echo '<td class="small-caption" width="50%"><a href="view.php?id='.$row["bug_id"].'#c'.$row["id"].'">'.string_display_line(trim($row["note"])?$row["note"]:'[empty]').'</td>';
 		echo '<td class="small-caption"><a href="bugnote_edit_page.php?bugnote_id='.$row["id"].'">edit</td>';
 	}
 
