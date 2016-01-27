@@ -350,12 +350,13 @@ $p_to = $t_bugnote_stats_to_y . '-' . $t_bugnote_stats_to_m . '-' . $t_bugnote_s
 $c_to = strtotime( $p_to ) + SECONDS_PER_DAY - 1;
 $c_from = strtotime( $p_from );
 
-$query = "SELECT bn.*, realname, p.name AS project_name, bug.summary, bug_text.note
+$query = "SELECT bn.*, realname, p.name AS project_name, bug.summary, bug_text.note, category.name AS category_name
  	FROM {bugnote} bn
  	JOIN {user} u ON u.id = bn.reporter_id
  	LEFT JOIN {bug} bug ON bn.bug_id = bug.id
  	LEFT JOIN {project} p ON p.id=bug.project_id
  	LEFT JOIN {bugnote_text} bug_text ON bug_text.id = bn.bugnote_text_id
+ 	LEFT JOIN {category} category ON category.id = bug.category_id
  	WHERE bn.time_tracking > 0";
 if ($user_id) {
 	$query .= ' AND bn.reporter_id = '.(int)$user_id;
@@ -420,7 +421,7 @@ foreach ($values as $date=>$row) {
 		if (!$user_id) { echo '<td class="small-caption">'.$row["realname"].'</td>'; }
 		echo '<td class="small-caption">'.date('Y-m-d', $row["date_submitted"]).'</td>';
 		echo '<td class="small-caption" align="right">'.db_minutes_to_hhmm($row["time_tracking"]).'</td>';
-		echo '<td class="small-caption">'.$row["project_name"].'<br />'.string_get_bug_view_link( $row['bug_id'] ).' '.$row["summary"].'</td>';
+		echo '<td class="small-caption">'.$row["project_name"].'<br />'.$row["category_name"].'<br />'.string_get_bug_view_link( $row['bug_id'] ).' '.$row["summary"].'</td>';
 		echo '<td class="small-caption" width="50%"><a href="view.php?id='.$row["bug_id"].'#c'.$row["id"].'">'.string_display_line(trim($row["note"])?$row["note"]:'[empty]').'</td>';
 		echo '<td class="small-caption"><a href="bugnote_edit_page.php?bugnote_id='.$row["id"].'">edit</td>';
 	}

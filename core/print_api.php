@@ -635,8 +635,8 @@ function print_subproject_option_list( $p_parent_id, $p_project_id = null, $p_fi
 		check_selected( $p_project_id, $t_full_id, false );
 		check_disabled( $t_id == $p_filter_project_id || !$t_can_report );
 		echo '>'
-			. str_repeat( '&#160;', count( $p_parents ) )
-			. str_repeat( '&raquo;', count( $p_parents ) ) . ' '
+			. str_repeat( '&#160;&#160;&#160;', count( $p_parents ) )
+			// . str_repeat( '&raquo;', count( $p_parents ) ) . ' '
 			. string_attribute( project_get_field( $t_id, 'name' ) )
 			. '</option>' . "\n";
 		print_subproject_option_list( $t_id, $p_project_id, $p_filter_project_id, $p_trace, $p_can_report_only, $p_parents );

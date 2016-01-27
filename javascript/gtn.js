@@ -1,17 +1,25 @@
 
 // GTN
 $(function() {
-	$('#bugnoteadd input[name=time_tracking]').keyup(function(){
-		if (this.value && !$('#bugnoteadd textarea[name=bugnote_text]').val().trim() ) {
-			// empty note and added time
-			// -> flash the private button and turn private on!
-			// so the customer won't see our empty time entree
-			$('#bugnoteadd input[name=private]').closest('tr').animate({
-			    backgroundColor: "yellow"
-            });
-			$('#bugnoteadd input[name=private]').prop('checked', true);
-		}
-	});
+	var forms = $('#bug-change-status-form, #bugnoteadd');
+	if (forms.length) {
+		// only for but note add, and for change status form
+
+		$(forms).find('input[name=time_tracking]').keyup(function(){
+			if (this.value && !$(forms).find('textarea[name=bugnote_text]').val().trim() ) {
+				// empty note and added time
+				// -> flash the private button and turn private on!
+				// so the customer won't see our empty time entree
+				$(forms).find('input[name=private]').closest('tr').children().animate({
+				    backgroundColor: "yellow"
+	            });
+				if (!$(forms).find('.gtn-note').length) {
+					$(forms).find('input[name=private]').parent().append('<span class="gtn-note">, Notizen mit Zeit und ohne Text sind privat</span>');
+				}
+				$(forms).find('input[name=private]').prop('checked', true);
+			}
+		});
+	}
 });
 
 // submit time tracking form
