@@ -221,6 +221,8 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 		}
 
 		$t_prev_id = -1;
+
+ob_start();
 ?>
 <h3>By Issue</h3>
 <table class="width100" cellspacing="0">
@@ -289,6 +291,9 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 <?php 	} ?>
 	</tr>
 </table>
+<?php
+$by_issue = ob_get_clean();
+?>
 
 <h3>Totals</h3>
 <table class="width100" cellspacing="0">
@@ -419,7 +424,7 @@ foreach ($values as $date=>$row) {
 	} else {
 		echo '<tr>';
 		if (!$user_id) { echo '<td class="small-caption">'.$row["realname"].'</td>'; }
-		echo '<td class="small-caption">'.date('Y-m-d', $row["date_submitted"]).'</td>';
+		echo '<td class="small-caption">'.date( config_get( 'normal_date_format' ), $row["date_submitted"]).'</td>';
 		echo '<td class="small-caption" align="right">'.db_minutes_to_hhmm($row["time_tracking"]).'</td>';
 		echo '<td class="small-caption">'.$row["project_name"].'<br />'.$row["category_name"].'<br />'.string_get_bug_view_link( $row['bug_id'] ).' '.$row["summary"].'</td>';
 		echo '<td class="small-caption" width="50%"><a href="view.php?id='.$row["bug_id"].'#c'.$row["id"].'">'.string_display_line(trim($row["note"])?$row["note"]:'[empty]').'</td>';
@@ -433,6 +438,8 @@ foreach ($values as $date=>$row) {
 	</table>
 
 <?php
+	echo $by_issue;
+
 	collapse_closed( 'bugnotestats' );
 ?>
 
