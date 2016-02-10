@@ -50,11 +50,6 @@ require_api( 'lang_api.php' );
 require_api( 'string_api.php' );
 require_api( 'utility_api.php' );
 
-?>
-<a id="bugnotestats"></a><br />
-<?php
-collapse_open( 'bugnotestats' );
-
 $t_today = date( 'd:m:Y' );
 $t_first_day_of_month = date( '1:m:Y' );
 $t_date_submitted = isset( $t_bug ) ? date( 'd:m:Y', $t_bug->date_submitted ) : $t_first_day_of_month;
@@ -104,6 +99,15 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 } else {
 	$t_cost_col = false;
 }
+
+if (defined( 'BILLING_CSV_EXPORT' ) ) {
+	return;
+}
+
+?>
+<a id="bugnotestats"></a><br />
+<?php
+collapse_open( 'bugnotestats' );
 
 # Time tracking date range input form
 # CSRF protection not required here - form does not result in modifications
@@ -188,6 +192,9 @@ if( ON == config_get( 'time_tracking_with_billing' ) ) {
 				<input type="submit" class="button"
 					name="get_bugnote_stats_button"
 					value="<?php echo lang_get( 'time_tracking_get_info_button' ) ?>"
+				/>
+				<input type="button" class="button" id="csv_export_button"
+					value="CSV Export"
 				/>
 			</td>
 		</tr>
@@ -349,30 +356,38 @@ $by_issue = ob_get_clean();
 
 
 <?php
-$p_from = $t_bugnote_stats_from_y . '-' . $t_bugnote_stats_from_m . '-' . $t_bugnote_stats_from_d;
-$p_to = $t_bugnote_stats_to_y . '-' . $t_bugnote_stats_to_m . '-' . $t_bugnote_stats_to_d;
+function get_gtn_time_tracking() {
+	global $t_bugnote_stats_from_y, $t_bugnote_stats_from_m, $t_bugnote_stats_from_d,
+		$t_bugnote_stats_to_y, $t_bugnote_stats_to_m, $t_bugnote_stats_to_d,
+		$user_id, $f_project_id, $t_params;
 
-$c_to = strtotime( $p_to ) + SECONDS_PER_DAY - 1;
-$c_from = strtotime( $p_from );
+	$p_from = $t_bugnote_stats_from_y . '-' . $t_bugnote_stats_from_m . '-' . $t_bugnote_stats_from_d;
+	$p_to = $t_bugnote_stats_to_y . '-' . $t_bugnote_stats_to_m . '-' . $t_bugnote_stats_to_d;
 
-$query = "SELECT bn.*, realname, p.name AS project_name, bug.summary, bug_text.note, category.name AS category_name
- 	FROM {bugnote} bn
- 	JOIN {user} u ON u.id = bn.reporter_id
- 	LEFT JOIN {bug} bug ON bn.bug_id = bug.id
- 	LEFT JOIN {project} p ON p.id=bug.project_id
- 	LEFT JOIN {bugnote_text} bug_text ON bug_text.id = bn.bugnote_text_id
- 	LEFT JOIN {category} category ON category.id = bug.category_id
- 	WHERE bn.time_tracking > 0";
-if ($user_id) {
-	$query .= ' AND bn.reporter_id = '.(int)$user_id;
+	$c_to = strtotime( $p_to ) + SECONDS_PER_DAY - 1;
+	$c_from = strtotime( $p_from );
+
+	$query = "SELECT bn.*, realname, p.name AS project_name, bug.summary, bug_text.note, category.name AS category_name
+		FROM {bugnote} bn
+		JOIN {user} u ON u.id = bn.reporter_id
+		LEFT JOIN {bug} bug ON bn.bug_id = bug.id
+		LEFT JOIN {project} p ON p.id=bug.project_id
+		LEFT JOIN {bugnote_text} bug_text ON bug_text.id = bn.bugnote_text_id
+		LEFT JOIN {category} category ON category.id = bug.category_id
+		WHERE bn.time_tracking > 0";
+	if ($user_id) {
+		$query .= ' AND bn.reporter_id = '.(int)$user_id;
+	}
+	if ($f_project_id) {
+		$query .= ' AND p.id = '.(int)$f_project_id;
+	}
+	$query .= ' AND bn.date_submitted >= ' . $c_from.' AND bn.date_submitted <= ' . $c_to;
+	$query .= ' ORDER BY bn.date_submitted DESC';
+
+	return db_query_bound( $query, $t_params );
 }
-if ($f_project_id) {
-	$query .= ' AND p.id = '.(int)$f_project_id;
-}
-$query .= ' AND bn.date_submitted >= ' . $c_from.' AND bn.date_submitted <= ' . $c_to;
-$query .= ' ORDER BY bn.date_submitted DESC';
 
-$result = db_query_bound( $query, $t_params );
+$result = get_gtn_time_tracking();
 
 $values = [];
 

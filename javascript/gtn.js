@@ -52,3 +52,9 @@ $(function(){
 		$('#time_tracking select[name^=start_], #time_tracking select[name^=end_]').hide();
 	}
 });
+
+// csv export button
+$(document).on('click', '#csv_export_button', function(){
+	var $form = $(this).closest('form');
+	document.location.href = 'billing_page.csv.php?'+$form.serialize();
+});
