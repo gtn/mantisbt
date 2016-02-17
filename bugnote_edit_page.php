@@ -135,6 +135,12 @@ html_page_top( bug_format_summary( $t_bug_id, SUMMARY_CAPTION ) );
 		<input type="text" name="time_tracking" size="5" value="<?php echo $t_time_tracking ?>" />
 	</td>
 </tr>
+<tr class="row-2">
+	<td class="center" colspan="2">
+		<strong><?php echo "Work Date" ?></strong><br />
+		<input type="text" name="date_worked" value="<?php echo bugnote_get_field( $f_bugnote_id, 'date_worked' ) ?>" />
+	</td>
+</tr>
 <?php } ?>
 <?php } ?>
 

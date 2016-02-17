@@ -159,7 +159,7 @@ function http_security_headers() {
 			} else {
 				$t_avatar_url = 'http://www.gravatar.com:80';
 			}
-			$t_csp[] = "img-src 'self' $t_avatar_url";
+			$t_csp[] = "img-src 'self' data: $t_avatar_url";
 		}
 
 		$t_style_src = "style-src 'self'";

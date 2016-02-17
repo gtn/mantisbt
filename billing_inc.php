@@ -203,6 +203,8 @@ collapse_open( 'bugnotestats' );
 
 <?php
 
+	db_query('UPDATE {bugnote} SET date_worked=date_submitted WHERE date_worked=0');
+
 	if( true ) { // || !is_blank( $f_get_bugnote_stats_button ) ) {
 		# Retrieve time tracking information
 		$t_from = $t_bugnote_stats_from_y . '-' . $t_bugnote_stats_from_m . '-' . $t_bugnote_stats_from_d;
@@ -367,7 +369,8 @@ function get_gtn_time_tracking() {
 	$c_to = strtotime( $p_to ) + SECONDS_PER_DAY - 1;
 	$c_from = strtotime( $p_from );
 
-	$query = "SELECT bn.*, realname, p.name AS project_name, bug.summary, bug_text.note, category.name AS category_name
+	$query = "
+		SELECT bn.*, realname, p.name AS project_name, bug.summary, bug_text.note, category.name AS category_name
 		FROM {bugnote} bn
 		JOIN {user} u ON u.id = bn.reporter_id
 		LEFT JOIN {bug} bug ON bn.bug_id = bug.id
@@ -381,8 +384,8 @@ function get_gtn_time_tracking() {
 	if ($f_project_id) {
 		$query .= ' AND p.id = '.(int)$f_project_id;
 	}
-	$query .= ' AND bn.date_submitted >= ' . $c_from.' AND bn.date_submitted <= ' . $c_to;
-	$query .= ' ORDER BY bn.date_submitted DESC';
+	$query .= ' AND bn.date_worked >= ' . $c_from.' AND bn.date_worked < ' . $c_to;
+	$query .= ' ORDER BY bn.date_worked DESC';
 
 	return db_query_bound( $query, $t_params );
 }
@@ -392,10 +395,10 @@ $result = get_gtn_time_tracking();
 $values = [];
 
 while ($row = db_fetch_array( $result )) {
-	$values[date('Y-m', $row["date_submitted"])] += 	$row["time_tracking"];
-	// $values[date('Y-m-d', $row["date_submitted"]).$row["date_submitted"]] = $row;
+	$values[date('Y-m', $row["date_worked"])] += 	$row["time_tracking"];
+	// $values[date('Y-m-d', $row["date_worked"]).$row["date_worked"]] = $row;
 	$values[$row["id"]] = $row;
-	// $values[date('Y-m-d', $row["date_submitted"])] += $row["time_tracking"];
+	// $values[date('Y-m-d', $row["date_worked"])] += $row["time_tracking"];
 
 	// var_dump($row);
 }
@@ -439,7 +442,7 @@ foreach ($values as $date=>$row) {
 	} else {
 		echo '<tr>';
 		if (!$user_id) { echo '<td class="small-caption">'.$row["realname"].'</td>'; }
-		echo '<td class="small-caption">'.date( config_get( 'normal_date_format' ), $row["date_submitted"]).'</td>';
+		echo '<td class="small-caption">'.date( config_get( 'normal_date_format' ), $row["date_worked"]).'</td>';
 		echo '<td class="small-caption" align="right">'.db_minutes_to_hhmm($row["time_tracking"]).'</td>';
 		echo '<td class="small-caption">'.$row["project_name"].'<br />'.$row["category_name"].'<br />'.string_get_bug_view_link( $row['bug_id'] ).' '.$row["summary"].'</td>';
 		echo '<td class="small-caption" width="50%"><a href="view.php?id='.$row["bug_id"].'#c'.$row["id"].'">'.string_display_line(trim($row["note"])?$row["note"]:'[empty]').'</td>';

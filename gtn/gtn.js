@@ -51,6 +51,25 @@ $(function(){
 
 		$('#time_tracking select[name^=start_], #time_tracking select[name^=end_]').hide();
 	}
+
+	var $button = $('<input type="button" value="change time" />');
+	var $input = $('input[name=date_worked]');
+	if ($input.val() * 1) {
+		$button.val((new DateFormatter()).formatDate(new Date($input.val() * 1000), 'Y-m-d H:i'));
+	}
+	$button.insertAfter($input);
+	$button.click(function(){
+		$input.datetimepicker('show');
+	});
+	$input.datetimepicker({
+		format: 'U',
+		onChangeDateTime:function(dp, $input){
+			$button.val((new DateFormatter()).formatDate(new Date($input.val() * 1000), 'Y-m-d H:i'));
+		}
+	});
+	// hide it
+	// .hide() would not work with the date dialog
+	$input.css({ width: 0, opacity: 0 });
 });
 
 // csv export button

@@ -79,6 +79,9 @@ $f_bugnote_text = trim( $f_bugnote_text ) . "\n\n";
 bugnote_set_text( $f_bugnote_id, $f_bugnote_text );
 bugnote_set_time_tracking( $f_bugnote_id, $f_time_tracking );
 
+$t_query = 'UPDATE {bugnote} SET date_worked = ' . db_param() . ' WHERE id=' . db_param();
+db_query( $t_query, array( gpc_get_int( 'date_worked' ), $f_bugnote_id ) );
+
 # Plugin integration
 event_signal( 'EVENT_BUGNOTE_EDIT', array( $t_bug_id, $f_bugnote_id ) );
 

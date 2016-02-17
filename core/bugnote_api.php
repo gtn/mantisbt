@@ -671,14 +671,14 @@ function bugnote_stats_get_project_array( $p_project_id, $p_from, $p_to, $p_cost
 	}
 
 	if( !is_blank( $c_from ) ) {
-		$t_from_where = ' AND bn.date_submitted >= ' . db_param();
+		$t_from_where = ' AND bn.date_worked >= ' . db_param();
 		$t_params[] = $c_from;
 	} else {
 		$t_from_where = '';
 	}
 
 	if( !is_blank( $c_to ) ) {
-		$t_to_where = ' AND bn.date_submitted <= ' . db_param();
+		$t_to_where = ' AND bn.date_worked <= ' . db_param();
 		$t_params[] = $c_to;
 	} else {
 		$t_to_where = '';
