@@ -27,8 +27,8 @@ $(document).on('change', '#time_tracking [name=user_id], #time_tracking [name=pr
 	$('#time_tracking').submit();
 });
 
-// date picker
 $(function(){
+	// date picker for time tracking form
 	if ($('#time_tracking').length) {
 		var c = {
 			changeMonth: true,
@@ -52,20 +52,27 @@ $(function(){
 		$('#time_tracking select[name^=start_], #time_tracking select[name^=end_]').hide();
 	}
 
+	// datetimepicker for bugnote form
 	var $button = $('<input type="button" value="change time" />');
 	var $input = $('input[name=date_worked]');
-	if ($input.val() * 1) {
-		$button.val((new DateFormatter()).formatDate(new Date($input.val() * 1000), 'Y-m-d H:i'));
+	function set_input() {
+		var int = parseInt($input.val());
+		if (int > 0) {
+			$input.val(int);
+			$button.val((new DateFormatter()).formatDate(new Date(int * 1000), 'Y-m-d H:i'));
+		} else {
+			$input.val('');
+		}
 	}
+	set_input();
+
 	$button.insertAfter($input);
 	$button.click(function(){
 		$input.datetimepicker('show');
 	});
 	$input.datetimepicker({
 		format: 'U',
-		onChangeDateTime:function(dp, $input){
-			$button.val((new DateFormatter()).formatDate(new Date($input.val() * 1000), 'Y-m-d H:i'));
-		}
+		onChangeDateTime: set_input
 	});
 	// hide it
 	// .hide() would not work with the date dialog

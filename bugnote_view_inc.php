@@ -266,7 +266,13 @@ $t_num_notes = count( $t_bugnotes );
 
 				case TIME_TRACKING:
 					if( $t_show_time_tracking ) {
-						echo '<div class="time-tracked">', lang_get( 'time_tracking_time_spent' ) . ' ' . $t_time_tracking_hhmm, '</div>';
+						$t_query = 'SELECT ' . 'date_worked' . ' FROM {bugnote} WHERE id=' . db_param();
+						$t_result = db_query( $t_query, array( $t_bugnote->id ), 1 );
+						$date_worked = db_result( $t_result );
+
+						echo '<div class="time-tracked">', lang_get( 'time_tracking_time_spent' ) . ' ' . $t_time_tracking_hhmm
+							.($date_worked && $date_worked!=$t_bugnote->date_submitted ? ', changed work date: '.date('Y-m-d H:i', $date_worked) : '')
+						, '</div>';
 					}
 					break;
 			}
