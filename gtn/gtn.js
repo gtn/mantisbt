@@ -54,29 +54,41 @@ $(function(){
 
 	// datetimepicker for bugnote form
 	var $button = $('<input type="button" value="change time" />');
-	var $input = $('input[name=date_worked]');
-	function set_input() {
-		var int = parseInt($input.val());
-		if (int > 0) {
-			$input.val(int);
-			$button.val((new DateFormatter()).formatDate(new Date(int * 1000), 'Y-m-d H:i'));
-		} else {
-			$input.val('');
+	var $input = $('input[name=date_worked]'); // edit bugnote form
+	if (!$input.length) {
+		// try to find add note form
+		var $cell = $('form#bugnoteadd input[name=time_tracking]').closest('td');
+		if ($cell.length) {
+			$input = $('<input type="text" name="date_worked" />').appendTo($cell);
 		}
 	}
-	set_input();
+	if ($input.length) {
+		function set_input() {
+			var int = parseInt($input.val());
+			if (int > 0) {
+				$input.val(int);
+				$button.val((new DateFormatter()).formatDate(new Date(int * 1000), 'Y-m-d H:i'));
+			} else {
+				$input.val('');
+			}
+		}
+		set_input();
 
-	$button.insertAfter($input);
-	$button.click(function(){
-		$input.datetimepicker('show');
-	});
-	$input.datetimepicker({
-		format: 'U',
-		onChangeDateTime: set_input
-	});
-	// hide it
-	// .hide() would not work with the date dialog
-	$input.css({ width: 0, opacity: 0 });
+		$button.insertAfter($input);
+		$button.click(function(){
+			$input.datetimepicker('show');
+		});
+		$input.datetimepicker({
+			format: 'U',
+			onChangeDateTime: set_input,
+			dayOfWeekStart: 1,
+			closeOnDateSelect: true,
+			step: 30,
+		});
+		// hide it
+		// .hide() would not work with the date dialog
+		$input.css({ width: 0, opacity: 0 });
+	}
 });
 
 // csv export button

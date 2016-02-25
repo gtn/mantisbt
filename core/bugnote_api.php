@@ -190,6 +190,8 @@ function bugnote_add( $p_bug_id, $p_bugnote_text, $p_time_tracking = '0:00', $p_
 	$c_date_submitted = $p_date_submitted <= 0 ? db_now() : (int)$p_date_submitted;
 	$c_last_modified = $p_last_modified <= 0 ? db_now() : (int)$p_last_modified;
 
+	$date_worked = gpc_get_int('date_worked', 0);
+
 	antispam_check();
 
 	if( REMINDER !== $p_type ) {
@@ -233,15 +235,15 @@ function bugnote_add( $p_bug_id, $p_bugnote_text, $p_time_tracking = '0:00', $p_
 
 	# insert bugnote info
 	$t_query = 'INSERT INTO {bugnote}
-			(bug_id, reporter_id, bugnote_text_id, view_state, date_submitted, last_modified, note_type, note_attr, time_tracking)
+			(bug_id, reporter_id, bugnote_text_id, view_state, date_submitted, last_modified, note_type, note_attr, time_tracking, date_worked)
 		VALUES ('
 		. db_param() . ', ' . db_param() . ', ' . db_param() . ', ' . db_param() . ', '
 		. db_param() . ', ' . db_param() . ', ' . db_param() . ', ' . db_param() . ', '
-		. db_param() . ' )';
+		. db_param() . ', ' . db_param() . ' )';
 	$t_params = array(
 		$c_bug_id, $p_user_id, $t_bugnote_text_id, $t_view_state,
 		$c_date_submitted, $c_last_modified, $c_type, $p_attr,
-		$c_time_tracking );
+		$c_time_tracking, $date_worked );
 	db_query( $t_query, $t_params );
 
 	# get bugnote id

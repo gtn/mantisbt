@@ -62,23 +62,25 @@ $output = fopen('php://output', 'w');
 $result = get_gtn_time_tracking();
 
 fputcsv($output, [
+	'mitarbeiter',
+	'datum',
+	'stunden',
+	'projekt',
+	'kategorie',
 	'bugid',
-	'name',
-	'date',
-	'work_time',
-	'project_name',
-	'category_name',
-	'comment',
-]);
+	'bugname',
+	'kommentar',
+], ';');
 while ($row = db_fetch_array( $result )) {
 	// output the column headings
 	fputcsv($output, [
-		'#'.bug_format_id($row["bug_id"]),
 		$row["realname"],
-		date('Y-m-d H:i', $row["date_submitted"]),
-		str_replace('.', ',', $row["time_tracking"]/60),
+		date('Y-m-d H:i', $row["date_worked"]),
+		round($row["time_tracking"]/60, 3), // str_replace('.', ',', $row["time_tracking"]/60),
 		$row["project_name"],
 		$row["category_name"],
+		'#'.bug_format_id($row["bug_id"]),
 		$row["summary"],
-	]);
+		$row["note"],
+	], ';');
 }
