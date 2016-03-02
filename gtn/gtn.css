@@ -1,0 +1,10 @@
+td .hoveronly {
+	display: none;
+}
+td:hover .hoveronly {
+	display: initial;
+	position: absolute;
+	margin-left: 10px;
+	font-family: inherit;
+	font-size: inherit;
+}

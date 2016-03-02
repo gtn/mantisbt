@@ -370,7 +370,7 @@ function get_gtn_time_tracking() {
 	$c_from = strtotime( $p_from );
 
 	$query = "
-		SELECT bn.*, realname, p.name AS project_name, bug.summary, bug_text.note, category.name AS category_name
+		SELECT bn.*, realname, p.id AS project_id, p.name AS project_name, bug.summary, bug_text.note, category.name AS category_name
 		FROM {bugnote} bn
 		JOIN {user} u ON u.id = bn.reporter_id
 		LEFT JOIN {bug} bug ON bn.bug_id = bug.id
@@ -444,7 +444,11 @@ foreach ($values as $date=>$row) {
 		if (!$user_id) { echo '<td class="small-caption">'.$row["realname"].'</td>'; }
 		echo '<td class="small-caption">'.date( config_get( 'normal_date_format' ), $row["date_worked"]).'</td>';
 		echo '<td class="small-caption" align="right">'.db_minutes_to_hhmm($row["time_tracking"]).'</td>';
-		echo '<td class="small-caption">'.$row["project_name"].'<br />'.$row["category_name"].'<br />'.string_get_bug_view_link( $row['bug_id'] ).' '.$row["summary"].'</td>';
+		echo '<td class="small-caption">'.
+			$row["project_name"].
+			'<span class="hoveronly"> <a href="view_all_set.php?temporary=y&view_type=advanced&project_id='.$row["project_id"].'&sort=last_updated&dir=DESC&per_page=200&hide_status=-2&match_type=0">All Issues<a/></span><br />'.
+			$row["category_name"].'<br />'.
+			string_get_bug_view_link( $row['bug_id'] ).' '.$row["summary"].'</td>';
 		echo '<td class="small-caption" width="50%"><a href="view.php?id='.$row["bug_id"].'#c'.$row["id"].'">'.string_display_line(trim($row["note"])?$row["note"]:'[empty]').'</td>';
 		echo '<td class="small-caption"><a href="bugnote_edit_page.php?bugnote_id='.$row["id"].'">edit</td>';
 	}
