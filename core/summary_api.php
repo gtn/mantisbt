@@ -62,9 +62,10 @@ require_api( 'utility_api.php' );
  * @param string $p_total    Count of total issues - normally string with hyperlink to filter.
  * @return void
  */
-function summary_helper_print_row( $p_label, $p_open, $p_resolved, $p_closed, $p_total ) {
+function summary_helper_print_row( $p_label, $p_open, $p_resolved, $p_closed, $p_total, $time_worked=null ) {
 	echo '<tr>';
 	printf( '<td class="width50">%s</td>', $p_label );
+	if ($time_worked !== null) printf( '<td class="width12 right">%s</td>', $time_worked );
 	printf( '<td class="width12 right">%s</td>', $p_open );
 	printf( '<td class="width12 right">%s</td>', $p_resolved );
 	printf( '<td class="width12 right">%s</td>', $p_closed );
@@ -495,7 +496,16 @@ function summary_print_by_developer() {
 				$t_bugs_total = $t_bug_link . '&amp;' . FILTER_PROPERTY_HIDE_STATUS . '=">' . $t_bugs_total . '</a>';
 			}
 
-			summary_helper_print_row( $t_user, $t_bugs_open, $t_bugs_resolved, $t_bugs_closed, $t_bugs_total );
+			// achtung: 2 mal ändern, kommt unten nochmal vor!
+			$query = "
+				SELECT SUM(bn.time_tracking)
+				FROM {bugnote} bn
+				JOIN {bug} bug ON bn.bug_id = bug.id
+				WHERE bn.reporter_id = ? AND $t_specific_where
+			";
+			$time_worked = db_minutes_to_hhmm(reset(db_fetch_array(db_query_bound( $query, [ $t_last_handler ] ))));
+
+			summary_helper_print_row( $t_user, $t_bugs_open, $t_bugs_resolved, $t_bugs_closed, $t_bugs_total, $time_worked );
 
 			$t_bugs_open = 0;
 			$t_bugs_resolved = 0;
@@ -531,7 +541,16 @@ function summary_print_by_developer() {
 			$t_bugs_total = $t_bug_link . '&amp;' . FILTER_PROPERTY_HIDE_STATUS . '=">' . $t_bugs_total . '</a>';
 		}
 
-		summary_helper_print_row( $t_user, $t_bugs_open, $t_bugs_resolved, $t_bugs_closed, $t_bugs_total );
+		// achtung: 2 mal ändern, kommt oben nochmal vor!
+		$query = "
+			SELECT SUM(bn.time_tracking)
+			FROM {bugnote} bn
+			JOIN {bug} bug ON bn.bug_id = bug.id
+			WHERE bn.reporter_id = ? AND $t_specific_where
+		";
+		$time_worked = db_minutes_to_hhmm(reset(db_fetch_array(db_query_bound( $query, [ $t_last_handler ] ))));
+
+		summary_helper_print_row( $t_user, $t_bugs_open, $t_bugs_resolved, $t_bugs_closed, $t_bugs_total, $time_worked );
 	}
 }
 

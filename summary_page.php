@@ -217,6 +217,7 @@ print_summary_submenu(); ?>
 		<thead>
 			<tr class="row-category2">
 				<th><?php echo lang_get( 'developer_stats' ) ?></th>
+				<td><?php echo lang_get( 'time_tracking' ) ?></td>
 				<?php echo $t_orcttab ?>
 			</tr>
 		</thead>
