@@ -8,3 +8,10 @@ td:hover .hoveronly {
 	font-family: inherit;
 	font-size: inherit;
 }
+table.highlight-rows tr:nth-child(odd):not(.row-category2):not(.row-category-history) {
+	background-color: #eee;
+}
+
+#monats-stunden tr:hover td {
+	background: #d8d8d8;
+}
