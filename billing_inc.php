@@ -153,7 +153,21 @@ collapse_open( 'bugnotestats' );
 			?>
 			<option value="<?php echo META_FILTER_ANY?>"<?php check_selected( $user_id, META_FILTER_ANY );?>>[<?php echo lang_get( 'all_users' )?>]</option>
 			<?php
-				print_assign_to_option_list( $user_id, 0); // $f_project_id );
+				$query = "
+					SELECT u.id, realname
+					FROM {bugnote} bn
+					JOIN {user} u ON u.id = bn.reporter_id
+					WHERE bn.time_tracking > 0
+					GROUP BY u.id
+					ORDER BY realname
+				";
+
+				$result = db_query_bound( $query, $t_params );
+				while ($row = db_fetch_array( $result )) {
+					?>
+					<option value="<?php echo $row['id']; ?>"<?php check_selected( $user_id, (int)$row['id'] );?>><?php echo $row['realname']; ?></option>
+					<?php
+				}
 			?>
 			</select>
 			</td>
@@ -395,9 +409,17 @@ $result = get_gtn_time_tracking();
 $values = [];
 
 while ($row = db_fetch_array( $result )) {
-	$values[date('Y-m', $row["date_worked"])] += 	$row["time_tracking"];
-	// $values[date('Y-m-d', $row["date_worked"]).$row["date_worked"]] = $row;
-	$values[$row["id"]] = $row;
+	if (empty($values[date('Y-m', $row["date_worked"])])) {
+			$values[date('Y-m', $row["date_worked"])] = [ 'type' => 'month' ] + $row;
+	} else {
+		$values[date('Y-m', $row["date_worked"])]["time_tracking"] += $row["time_tracking"];
+	}
+	if (empty($values[date('Y-m-d', $row["date_worked"])])) {
+			$values[date('Y-m-d', $row["date_worked"])] = [ 'type' => 'day' ] + $row;
+	} else {
+		$values[date('Y-m-d', $row["date_worked"])]["time_tracking"] += $row["time_tracking"];
+	}
+	$values[$row["id"]] = [ 'type' => 'item' ] + $row;
 	// $values[date('Y-m-d', $row["date_worked"])] += $row["time_tracking"];
 
 	// var_dump($row);
@@ -406,7 +428,7 @@ while ($row = db_fetch_array( $result )) {
 // krsort($values);
 ?>
 <h3>By Date</h3>
-<table class="width100" cellspacing="0">
+<table class="width100 highlight-rows" cellspacing="0">
 	<tr class="row-category2">
 		<?php if (!$user_id) { ?>
 		<td class="small-caption bold">
@@ -430,17 +452,26 @@ while ($row = db_fetch_array( $result )) {
 
 	</tr>
 <?php
-foreach ($values as $date=>$row) {
-	if (!is_array($row)) {
+foreach ($values as $row) {
+	if ($row['type'] == 'month') {
 		echo '<tr class="row-category-history">';
 		if (!$user_id) { echo '<td></td>'; }
-		echo '<td>'.$date.'</td>';
-		echo '<td align="right">'.db_minutes_to_hhmm($row).'</td>';
+		echo '<td>'.date('Y-m', $row["date_worked"]).'</td>';
+		echo '<td align="right">'.db_minutes_to_hhmm($row["time_tracking"]).'</td>';
+		echo '<td></td>';
+		echo '<td></td>';
+		echo '<td></td>';
+	} elseif ($row['type'] == 'day') {
+		echo '<tr class="row-category2">';
+		if (!$user_id) { echo '<td></td>'; }
+		echo '<td class="small-caption bold">'.date('l', $row["date_worked"]).'</td>';
+		echo '<td align="right">'.db_minutes_to_hhmm($row["time_tracking"]).'</td>';
 		echo '<td></td>';
 		echo '<td></td>';
 		echo '<td></td>';
 	} else {
 		echo '<tr>';
+
 		if (!$user_id) { echo '<td class="small-caption">'.$row["realname"].'</td>'; }
 		echo '<td class="small-caption">'.date( config_get( 'normal_date_format' ), $row["date_worked"]).'</td>';
 		echo '<td class="small-caption" align="right">'.db_minutes_to_hhmm($row["time_tracking"]).'</td>';
