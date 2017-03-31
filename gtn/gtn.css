@@ -15,3 +15,7 @@ table.highlight-rows tr:nth-child(odd):not(.row-category2):not(.row-category-his
 #monats-stunden tr:hover td {
 	background: #d8d8d8;
 }
+
+form#bugnoteadd input[name=time_tracking_toggle] {
+	margin-left: 100px;
+}

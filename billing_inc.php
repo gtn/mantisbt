@@ -49,6 +49,7 @@ require_api( 'helper_api.php' );
 require_api( 'lang_api.php' );
 require_api( 'string_api.php' );
 require_api( 'utility_api.php' );
+require_once ('gtn/lib.php');
 
 $t_today = date( 'd:m:Y' );
 $t_first_day_of_month = date( '1:m:Y' );
@@ -216,8 +217,6 @@ collapse_open( 'bugnotestats' );
 </form>
 
 <?php
-
-	db_query('UPDATE {bugnote} SET date_worked=date_submitted WHERE date_worked=0');
 
 	if( true ) { // || !is_blank( $f_get_bugnote_stats_button ) ) {
 		# Retrieve time tracking information

@@ -53,13 +53,13 @@ $(function(){
 	}
 
 	// datetimepicker for bugnote form
-	var $button = $('<input type="button" value="change time" />');
+	var $button = $('<input type="button" value="change time"/>');
 	var $input = $('input[name=date_worked]'); // edit bugnote form
 	if (!$input.length) {
 		// try to find add note form
-		var $cell = $('form#bugnoteadd input[name=time_tracking]').closest('td');
-		if ($cell.length) {
-			$input = $('<input type="text" name="date_worked" />').appendTo($cell);
+		var $time_tracking = $('form#bugnoteadd input[name=time_tracking]');
+		if ($time_tracking.length) {
+			$input = $('<input type="text" name="date_worked" />').insertAfter($time_tracking);
 		}
 	}
 	if ($input.length) {
